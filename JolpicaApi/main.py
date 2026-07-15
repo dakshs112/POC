@@ -40,6 +40,9 @@ async def home():
 # Helper function to fetch drivers from Jolpica API
 async def fetch_drivers():
     async with httpx.AsyncClient() as client:
+
+        if not os.path.exists(DATA_DIR):
+            os.makedirs(DATA_DIR)
         response = await client.get(
             f"{BASE_URL}/current/drivers.json",
             timeout=10
@@ -56,6 +59,9 @@ async def fetch_drivers():
 
 @app.get("/drivers",response_class =HTMLResponse)
 async def get_drivers():
+    if not os.path.exists(DATA_DIR):
+        
+        os.makedirs(DATA_DIR)
 
     drivers = await fetch_drivers()
 
@@ -86,6 +92,10 @@ async def get_drivers():
 
 @app.get("/users/{user_id}",response_class=HTMLResponse)
 async def get_user_favorites(user_id: str):
+    
+    if not os.path.exists(DATA_DIR):
+            
+                os.makedirs(DATA_DIR)
 
     # Check if user exists
     if user_id not in mock_users:
