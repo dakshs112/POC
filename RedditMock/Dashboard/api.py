@@ -1,31 +1,42 @@
+import os
 import requests
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.getenv("REDDIT_DASHBOARD_API_URL", "http://localhost:8000")
+TIMEOUT = 10
+
+
+def _get(path, params=None, default=None):
+    try:
+        response = requests.get(f"{BASE_URL}{path}", params=params, timeout=TIMEOUT)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException:
+        return default if default is not None else []
 
 
 def get_posts(limit=20):
-    response = requests.get(
-        f"{BASE_URL}/posts",
-        params={"limit": limit}
-    )
-    return response.json()
+    return _get("/posts", params={"limit": limit}, default=[])
 
 
 def get_stats():
-    response = requests.get(f"{BASE_URL}/stats")
-    return response.json()
+    return _get(
+        "/stats",
+        default={"total_posts": 0, "unique_authors": 0, "last_updated": "—"},
+    )
 
 
 def get_authors():
-    response = requests.get(f"{BASE_URL}/authors")
-    return response.json()
+    return _get("/authors", default=[])
 
 
 def get_timeline():
-    response = requests.get(f"{BASE_URL}/timeline")
-    return response.json()
+    return _get("/timeline", default=[])
 
 
 def sync_posts():
-    response = requests.post(f"{BASE_URL}/sync")
-    return response.json()
+    try:
+        response = requests.post(f"{BASE_URL}/sync", timeout=TIMEOUT)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as exc:
+        return {"error": str(exc)}
